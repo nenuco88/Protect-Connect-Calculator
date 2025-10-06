@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Swisscom × beem – Protect &amp; Connect Kalkulator</title>
+<style>
+  :root { --bg:#f6f7fb; --card:#fff; --ink:#0f172a; --muted:#667085; --border:#e5e7eb; --primary:#0048DA; --secondary:#7A00FF; --accent:#00A3FF; }
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,system-ui,Segoe UI,Roboto,Helvetica,Arial}
+  .topbar{position:sticky;top:0;z-index:10;background:linear-gradient(90deg,var(--primary),var(--secondary));color:#fff;padding:10px 16px;display:flex;gap:12px;align-items:center;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.2px}
+  .logo .blob{width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#fff,rgba(255,255,255,.25) 40%,transparent 60%),conic-gradient(from 30deg,var(--secondary),var(--primary),var(--accent),var(--secondary))}
+  .wrap{max-width:1200px;margin:18px auto 80px;padding:0 16px}
+  h1{font-size:22px;margin:8px 0 6px}
+  .subtitle{color:var(--muted);font-size:13px}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px}
+  .toggle, .btn{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);padding:8px 12px;border-radius:10px}
+  .btn{cursor:pointer;font-weight:600}
+  .btn.primary{background:var(--primary);color:#fff;border-color:transparent}
+  .grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+  @media(max-width:920px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  table{width:100%;border-collapse:collapse}
+  thead th{font-weight:600;font-size:12px;text-align:left;padding:10px 12px;color:#475467;background:#f1f5ff;border-bottom:1px solid var(--border)}
+  tbody td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+  .planLabel{font-weight:600}
+  .money{text-align:right;font-variant-numeric: tabular-nums;white-space:nowrap}
+  .qty{width:90px}
+  .summary{display:grid;grid-template-columns:1fr;gap:12px;padding:12px}
+  .summary .item{border:1px solid var(--border);border-radius:12px;padding:12px 14px;background:#fff}
+  .summary .item h3{margin:0 0 6px;font-size:13px;color:#475467;font-weight:600}
+  .summary .val{font-size:22px;font-weight:800;text-align:right}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .footnote{margin-top:8px;color:#667085;font-size:12px}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="logo"><div class="blob"></div> Swisscom <span style="opacity:.7">×</span> beem</div>
+  </div>
+  <div class="wrap">
+    <h1>Protect &amp; Connect – Interaktiver Kalkulator</h1>
+    <div class="subtitle">Fixe Listenpreise aus Excel (inkl. Beem). Staffelrabatte gelten auf den Preis <strong>ohne Beem</strong>. KMU −15% ebenfalls nur auf den Preis ohne Beem; kein KMU für Mini &amp; Data Swiss (light).</div>
+
+    <div class="actions">
+      <label class="toggle"><input type="checkbox" id="withBeem" checked> Beem anzeigen (+5)</label>
+      <label class="toggle"><input type="checkbox" id="withKMU"> KMU −15% (eligible)</label>
+      <label class="toggle"><input type="checkbox" id="withVAT"> inkl. MwSt. 8.1%</label>
+      <button class="btn" id="btnReset">Zurücksetzen</button>
+      <button class="btn primary" id="btnPDF">Export als PDF</button>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <table>
+          <thead><tr>
+            <th>Mobile-/Data-Abo</th>
+            <th>Listenpreis (inkl. Beem)</th>
+            <th>Anzahl</th>
+            <th class="money">Einzelpreis aktiv</th>
+            <th class="money">Zwischensumme</th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <div class="summary">
+          <div class="item"><h3>Summe (vor KMU)</h3><div class="val" id="sumBefore">–</div></div>
+          <div class="item"><h3>KMU‑Rabatt (15%)</h3><div class="val" id="kmuDiscount">–</div></div>
+          <div class="row">
+            <div class="item"><h3>Gesamtsumme (Monat)</h3><div class="val" id="grandTotal">–</div></div>
+            <div class="item"><h3>Summe Jahr</h3><div class="val" id="yearTotal">–</div></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <p class="footnote">Staffeln: 1–4: 0%, 5–19: −5%, 20–49: −10%, 50–99: −15%, 100–249: −20%. KMU‑Rabatt gilt nicht für „Mini“, „Data Swiss light“, „Data Swiss“. Berechnung: (Listenpreis−5)×Staffel + (optional +5 Beem) ⇒ Summe ⇒ − KMU (nur auf Teil ohne Beem) ⇒ optional MwSt.</p>
+  </div>
+
+<script>
+  const PLANS = [{"plan": "Global", "base_incl_beem": 205.0}, {"plan": "Intercontinental", "base_incl_beem": 155.0}, {"plan": "Europe advanced", "base_incl_beem": 105.0}, {"plan": "Neighbours", "base_incl_beem": 90.0}, {"plan": "Europe", "base_incl_beem": 85.0}, {"plan": "Europe light", "base_incl_beem": 55.0}, {"plan": "Swiss", "base_incl_beem": 55.0}, {"plan": "Swiss light", "base_incl_beem": 35.0}, {"plan": "Mini", "base_incl_beem": 16.0}, {"plan": "Data Swiss light", "base_incl_beem": 15.0}, {"plan": "Data Swiss", "base_incl_beem": 54.0}];
+  const TIERS = [{"min": 1, "max": 4, "factor": 1.0}, {"min": 5, "max": 19, "factor": 0.95}, {"min": 20, "max": 49, "factor": 0.9}, {"min": 50, "max": 99, "factor": 0.85}, {"min": 100, "max": 249, "factor": 0.8}];
+  const MWST = 0.081;
+  const BEEM = 5.0;
+
+  function fmt(n){return new Intl.NumberFormat('de-CH', {style:'currency',currency:'CHF',minimumFractionDigits:2}).format(n);}
+  function findFactor(q){for(const t of TIERS){if(q>=t.min && q<=t.max) return t.factor;} return 1.0;}
+  function kmuEligible(name){const n=String(name).toLowerCase(); if(n.includes('mini'))return false; if(n.includes('data swiss'))return false; return true;}
+
+  function renderRows(){const tb=document.getElementById('tbody'); tb.innerHTML='';
+    PLANS.forEach((p,idx)=>{
+      const tr=document.createElement('tr');
+      const td1=document.createElement('td'); td1.innerHTML=`<span class='planLabel'>${p.plan}</span>`; tr.appendChild(td1);
+
+      const tdBase=document.createElement('td'); tdBase.className='money'; tdBase.textContent=fmt(p.base_incl_beem); tr.appendChild(tdBase);
+
+      const tdQty=document.createElement('td');
+      const inpQty=document.createElement('input'); inpQty.type='number'; inpQty.min='0'; inpQty.step='1'; inpQty.className='qty'; inpQty.value=0; inpQty.dataset.index=idx; inpQty.addEventListener('input', recalc);
+      tdQty.appendChild(inpQty); tr.appendChild(tdQty);
+
+      const tdUnit=document.createElement('td'); tdUnit.className='money'; tdUnit.id=`unit-${idx}`; tr.appendChild(tdUnit);
+      const tdSum=document.createElement('td'); tdSum.className='money'; tdSum.id=`sum-${idx}`; tr.appendChild(tdSum);
+      tb.appendChild(tr);
+    });
+  }
+
+  function recalc(){const withBeem=document.getElementById('withBeem').checked;
+    const withKMU=document.getElementById('withKMU').checked;
+    const withVAT=document.getElementById('withVAT').checked;
+
+    let subtotal=0; // includes beem if selected
+    let kmu_base_total=0;
+
+    document.querySelectorAll('.qty').forEach(inp=>{
+      const i=parseInt(inp.dataset.index,10);
+      const q=Math.max(0, parseInt(inp.value||'0',10));
+
+      const base_incl = PLANS[i].base_incl_beem;
+      const base_excl = base_incl - BEEM; // Preis ohne Beem
+      const factor = findFactor(q);
+      const unit_excl = base_excl * factor;
+      const unit_beem = withBeem ? BEEM : 0;
+      const unit_eff = unit_excl + unit_beem;
+
+      document.getElementById(`unit-${i}`).textContent = fmt(unit_eff);
+      const row = unit_eff * q;
+      document.getElementById(`sum-${i}`).textContent = fmt(row);
+
+      subtotal += row;
+      if (kmuEligible(PLANS[i].plan)) kmu_base_total += unit_excl * q; // KMU nur auf exkl. Beem
+    });
+
+    const kmu = withKMU ? kmu_base_total * 0.15 : 0;
+    let total = subtotal - kmu;
+    if(withVAT) total *= (1+MWST);
+
+    document.getElementById('sumBefore').textContent = fmt(subtotal);
+    document.getElementById('kmuDiscount').textContent = (kmu>0?'−':'')+fmt(kmu);
+    document.getElementById('grandTotal').textContent = fmt(total);
+    document.getElementById('yearTotal').textContent = fmt(total*12);
+  }
+
+  document.addEventListener('change', e=>{ if(['withBeem','withKMU','withVAT'].includes(e.target.id)) recalc(); });
+  document.getElementById('btnReset').addEventListener('click', ()=>{
+    document.querySelectorAll('.qty').forEach(inp=> inp.value=0);
+    document.getElementById('withBeem').checked=true;
+    document.getElementById('withKMU').checked=false;
+    document.getElementById('withVAT').checked=false;
+    recalc();
+  });
+  document.getElementById('btnPDF').addEventListener('click', ()=> window.print());
+
+  renderRows(); recalc();
+</script>
+</body>
+</html>
