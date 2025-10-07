@@ -40,8 +40,8 @@
     <div class="logo"><div class="blob"></div> Swisscom <span style="opacity:.7">×</span> beem</div>
   </div>
   <div class="wrap">
-    <h1>Protect &amp; Connect – Interaktiver Kalkulator <span class="badge">Staffel je Abo</span></h1>
-    <div class="subtitle">Ausgangspreis = <b>mit Beem</b>. Berechnung nutzt Staffelpreise <b>ohne Beem</b>. KMU −15% nur auf den Anteil ohne Beem. Kein KMU für Mini &amp; Data Swiss (light/ohne Zusatz).</div>
+    <h1>Protect &amp; Connect – Interaktiver Kalkulator <span class="badge">Globale Mengenstaffel</span></h1>
+    <div class="subtitle">Rabattstufe richtet sich nach der <b>Gesamtanzahl</b> aller Abos (z. B. 2 Swiss + 2 Swiss light + 1 Europe = 5 ⇒ Stufe 5–19). Ausgangspreis = <b>mit Beem</b>. Berechnung nutzt Staffelpreise <b>ohne Beem</b>. KMU −15% nur auf den Anteil ohne Beem. Kein KMU für Mini &amp; Data Swiss (light/ohne Zusatz).</div>
 
     <div class="actions">
       <label class="toggle"><input type="checkbox" id="withBeem" checked> Beem anzeigen (+5)</label>
@@ -75,7 +75,7 @@
       </section>
     </div>
 
-    <p class="footnote">Gesamt‑Rabatt summiert: (Staffelrabatt vom 1–4‑Preis ohne Beem) + (KMU‑Rabatt). Beem ist eine Leistung und wird nicht rabattiert.</p>
+    <p class="footnote">Staffelrabatt basiert auf der Gesamtanzahl aller Abos. Pro Zeile wird derselbe Mengenindex angewendet. Beem ist eine Leistung und wird nicht rabattiert.</p>
   </div>
 
 <script>
@@ -122,22 +122,27 @@
     const withKMU=document.getElementById('withKMU').checked;
     const withVAT=document.getElementById('withVAT').checked;
 
+    // 1) Gesamtanzahl bestimmen
+    let totalQty = 0;
+    document.querySelectorAll('.qty').forEach(inp=>{ totalQty += Math.max(0, parseInt(inp.value||'0',10)); });
+    const tIdxGlobal = tierIndex(totalQty || 1);
+
     let subtotal=0;
     let kmu_base_total=0;
     let volume_discount_total=0;
     let kmu_discount_total=0;
 
+    // 2) Alle Zeilen mit globalem tIdx berechnen
     document.querySelectorAll('.qty').forEach(inp=>{
       const i=parseInt(inp.dataset.index,10);
       const q=Math.max(0,parseInt(inp.value||'0',10));
       const tiers = PLANS[i].tiers_excl_beem;
-      const tIdx = tierIndex(q || 1);
 
-      const base_with_beem = tiers[0] + BEEM;
+      const base_with_beem = tiers[0] + BEEM; // Ausgangspreis (1–4 + Beem)
       document.getElementById(`base-${i}`).textContent = fmt(base_with_beem);
 
-      const unit_excl = tiers[tIdx];
-      const unit_excl_baseline = tiers[0];
+      const unit_excl = tiers[tIdxGlobal];      // globaler Mengenindex
+      const unit_excl_baseline = tiers[0];      // 1–4 Basis für Volumenrabatt
       const unit_beem = withBeem ? BEEM : 0;
       const unit_eff = unit_excl + unit_beem;
 
@@ -146,10 +151,10 @@
       document.getElementById(`sum-${i}`).textContent = fmt(row);
       subtotal += row;
 
-      const vol_disc = Math.max(0, (unit_excl_baseline - unit_excl)) * q;
+      const vol_disc = Math.max(0, (unit_excl_baseline - unit_excl)) * q; // exkl. Beem
       volume_discount_total += vol_disc;
 
-      if (withKMU && kmuEligible(PLANS[i].plan)) kmu_base_total += unit_excl * q;
+      if (withKMU && kmuEligible(PLANS[i].plan)) kmu_base_total += unit_excl * q; // exkl. Beem
     });
 
     kmu_discount_total = withKMU ? kmu_base_total * 0.15 : 0;
