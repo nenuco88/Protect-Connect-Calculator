@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Swisscom × beem – Protect &amp; Connect Kalkulator</title>
+<title>Swisscom × beem – Protect & Connect Kalkulator</title>
 <style>
   :root { --bg:#f6f7fb; --card:#fff; --ink:#0f172a; --muted:#667085; --border:#e5e7eb; --primary:#0048DA; --secondary:#7A00FF; --accent:#00A3FF; }
   html,body{margin:0;background:var(--bg);color:#0f172a;font-family:-apple-system,system-ui,Segoe UI,Roboto,Helvetica,Arial}
@@ -30,7 +30,6 @@
   .summary .item{border:1px solid var(--border);border-radius:12px;padding:12px 14px;background:#fff}
   .summary .item h3{margin:0 0 6px;font-size:13px;color:#475467;font-weight:600}
   .summary .val{font-size:22px;font-weight:800;text-align:right}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .footnote{margin-top:8px;color:#667085;font-size:12px}
   .badge{display:inline-block;border:1px solid var(--border);padding:2px 8px;border-radius:999px;font-size:11px;color:#475467;background:#fff;margin-left:6px}
 </style>
@@ -41,7 +40,7 @@
   </div>
   <div class="wrap">
     <h1>Protect &amp; Connect – Interaktiver Kalkulator <span class="badge">Globale Mengenstaffel</span></h1>
-    <div class="subtitle">Rabattstufe richtet sich nach der <b>Gesamtanzahl</b> aller Abos (z. B. 2 Swiss + 2 Swiss light + 1 Europe = 5 ⇒ Stufe 5–19). Ausgangspreis = <b>mit Beem</b>. Berechnung nutzt Staffelpreise <b>ohne Beem</b>. KMU −15% nur auf den Anteil ohne Beem. Kein KMU für Mini &amp; Data Swiss (light/ohne Zusatz).</div>
+    <div class="subtitle">Rabattstufe richtet sich nach der <b>Gesamtanzahl</b> aller Abos (z. B. 2 Swiss + 2 Swiss light + 1 Europe = 5 ⇒ Stufe 5–19). Ausgangspreis = <b>mit Beem</b>. Berechnung nutzt Staffelpreise <b>ohne Beem</b>. KMU −15% nur auf den Anteil ohne Beem. Kein KMU für Mini &amp; Data Swiss (light/ohne Zusatz).</div>
 
     <div class="actions">
       <label class="toggle"><input type="checkbox" id="withBeem" checked> Beem anzeigen (+5)</label>
@@ -68,8 +67,8 @@
       <section class="card">
         <div class="summary">
           <div class="item"><h3>Summe (vor KMU)</h3><div class="val" id="sumBefore">–</div></div>
-          <div class="item"><h3>KMU‑Rabatt (15%)</h3><div class="val" id="kmuDiscount">–</div></div>
-          <div class="item"><h3>Gesamt‑Rabatt (Staffel + KMU, exkl. Beem)</h3><div class="val" id="totalDiscount">–</div></div>
+          <div class="item"><h3>KMU-Rabatt (15%)</h3><div class="val" id="kmuDiscount">–</div></div>
+          <div class="item"><h3>Gesamt-Rabatt (Staffel + KMU, exkl. Beem)</h3><div class="val" id="totalDiscount">–</div></div>
           <div class="item"><h3>Gesamtsumme (Monat)</h3><div class="val" id="grandTotal">–</div></div>
         </div>
       </section>
@@ -79,12 +78,25 @@
   </div>
 
 <script>
-  const PLANS = [{"plan": "Swiss mini", "tiers_excl_beem": [11.0, 10.65, 10.45, 10.0, 9.5]}, {"plan": "Swiss light", "tiers_excl_beem": [30.0, 29.1, 28.5, 27.4, 26.1]}, {"plan": "Swiss", "tiers_excl_beem": [50.0, 48.5, 47.5, 46.0, 45.0]}, {"plan": "Europe light", "tiers_excl_beem": [50.0, 48.5, 47.5, 46.0, 45.0]}, {"plan": "Europe", "tiers_excl_beem": [80.0, 77.6, 76.0, 76.0, 74.0]}, {"plan": "Neighbours", "tiers_excl_beem": [85.0, 82.45, 80.75, 80.0, 78.0]}, {"plan": "Europe advanced", "tiers_excl_beem": [100.0, 97.0, 95.0, 94.0, 92.0]}, {"plan": "Intercontinental", "tiers_excl_beem": [150.0, 145.5, 142.5, 136.0, 132.0]}, {"plan": "Global", "tiers_excl_beem": [200.0, 194.0, 190.0, 182.0, 177.0]}, {"plan": "Data Swiss light", "tiers_excl_beem": [10.0, 9.8, 9.6, 9.0, 8.5]}, {"plan": "Data Swiss", "tiers_excl_beem": [49.0, 47.0, 45.0, 43.0, 40.0]}];
+  const PLANS = [
+    {"plan":"Swiss mini","tiers_excl_beem":[11.00,10.65,10.45,10.00,9.50]},
+    {"plan":"Swiss light","tiers_excl_beem":[30.00,29.10,28.50,27.40,26.10]},
+    {"plan":"Swiss","tiers_excl_beem":[50.00,48.50,47.50,46.00,45.00]},
+    {"plan":"Europe light","tiers_excl_beem":[50.00,48.50,47.50,46.00,45.00]},
+    {"plan":"Europe","tiers_excl_beem":[80.00,77.60,76.00,76.00,74.00]},
+    {"plan":"Neighbours","tiers_excl_beem":[85.00,82.45,80.75,80.00,78.00]},
+    {"plan":"Europe advanced","tiers_excl_beem":[100.00,97.00,95.00,94.00,92.00]},
+    {"plan":"Intercontinental","tiers_excl_beem":[150.00,145.50,142.50,136.00,132.00]},
+    {"plan":"Global","tiers_excl_beem":[200.00,194.00,190.00,182.00,177.00]},
+    {"plan":"Data Swiss light","tiers_excl_beem":[10.00,9.80,9.60,9.00,8.50]},
+    {"plan":"Data Swiss","tiers_excl_beem":[49.00,47.00,45.00,43.00,40.00]}
+  ];
+
   const MWST = 0.081;
   const BEEM = 5.0;
-  const KMU_EXCL = ["mini", "data swiss"];
+  const KMU_EXCL = ["mini","data swiss"]; // exclude Swiss mini, Data Swiss (light/ohne Zusatz)
 
-  function fmt(n){return new Intl.NumberFormat('de-CH', {style:'currency',currency:'CHF',minimumFractionDigits:2}).format(n);}
+  function fmt(n){return new Intl.NumberFormat('de-CH',{style:'currency',currency:'CHF',minimumFractionDigits:2}).format(n);}
   function tierIndex(q){
     if(q>=1 && q<=4) return 0;
     if(q>=5 && q<=19) return 1;
@@ -160,7 +172,7 @@
     kmu_discount_total = withKMU ? kmu_base_total * 0.15 : 0;
     const total_discount = volume_discount_total + kmu_discount_total;
 
-    let total = subtotal - kmu_discount_total;
+    let total = subtotal - kmu_discount_total; // Volumenrabatt steckt schon im unit_excl
     if(withVAT) total *= (1+MWST);
 
     document.getElementById('sumBefore').textContent = fmt(subtotal);
