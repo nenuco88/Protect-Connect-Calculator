@@ -32,6 +32,30 @@
   .summary .val{font-size:22px;font-weight:800;text-align:right}
   .footnote{margin-top:8px;color:#667085;font-size:12px}
   .badge{display:inline-block;border:1px solid var(--border);padding:2px 8px;border-radius:999px;font-size:11px;color:#475467;background:#fff;margin-left:6px}
+
+  /* --- PRINT LAYOUT (PDF EXPORT) --- */
+  @media print {
+    body { background:#fff; color:#000; -webkit-print-color-adjust:exact; }
+    .actions, .footnote, .btn, .toggle, .badge, .subtitle { display:none !important; }
+    .topbar { position:relative; box-shadow:none; margin-bottom:10mm; }
+    .logo { justify-content:center; font-size:18pt; color:#0048DA; }
+    .logo .blob { width:36px; height:36px; }
+    .wrap { margin:0; padding:0 10mm; }
+    h1 { display:none; }
+    table { border-collapse:collapse; width:100%; font-size:10pt; }
+    thead th {
+      background:#0048DA; color:#fff; padding:6px 8px;
+      -webkit-print-color-adjust:exact;
+    }
+    tbody td { padding:6px 8px; border-bottom:1px solid #ccc; }
+    .summary { margin-top:10mm; page-break-inside:avoid; }
+    .summary .item {
+      border:1px solid #000; padding:8px 10px; border-radius:4px; background:#fff;
+    }
+    .summary .val { font-size:14pt; font-weight:bold; }
+    @page { size:A4 portrait; margin:15mm; }
+    footer { position:fixed; bottom:0; left:0; right:0; text-align:center; font-size:10pt; color:#666; }
+  }
 </style>
 </head>
 <body>
@@ -40,7 +64,7 @@
   </div>
   <div class="wrap">
     <h1>Protect &amp; Connect – Interaktiver Kalkulator <span class="badge">Globale Mengenstaffel</span></h1>
-    <div class="subtitle">Rabattstufe richtet sich nach der <b>Gesamtanzahl</b> aller Abos (z. B. 2 Swiss + 2 Swiss light + 1 Europe = 5 ⇒ Stufe 5–19). Ausgangspreis = <b>mit Beem</b>. Berechnung nutzt Staffelpreise <b>ohne Beem</b>. KMU −15% nur auf den Anteil ohne Beem. Kein KMU für Mini &amp; Data Swiss (light/ohne Zusatz).</div>
+    <div class="subtitle">Rabattstufe richtet sich nach der <b>Gesamtanzahl</b> aller Abos. Ausgangspreis = <b>mit Beem</b>. Berechnung nutzt Staffelpreise <b>ohne Beem</b>. KMU −15% nur auf den Anteil ohne Beem. Kein KMU für Mini &amp; Data Swiss.</div>
 
     <div class="actions">
       <label class="toggle"><input type="checkbox" id="withBeem" checked> Beem anzeigen (+5)</label>
@@ -77,6 +101,8 @@
     <p class="footnote">Staffelrabatt basiert auf der Gesamtanzahl aller Abos. Pro Zeile wird derselbe Mengenindex angewendet. Beem ist eine Leistung und wird nicht rabattiert.</p>
   </div>
 
+  <footer>Erstellt mit Swisscom × beem Kalkulator – Stand Oktober 2025</footer>
+
 <script>
   const PLANS = [
     {"plan":"Swiss mini","tiers_excl_beem":[11.00,10.65,10.45,10.00,9.50]},
@@ -94,7 +120,7 @@
 
   const MWST = 0.081;
   const BEEM = 5.0;
-  const KMU_EXCL = ["mini","data swiss"]; // exclude Swiss mini, Data Swiss (light/ohne Zusatz)
+  const KMU_EXCL = ["mini","data swiss"];
 
   function fmt(n){return new Intl.NumberFormat('de-CH',{style:'currency',currency:'CHF',minimumFractionDigits:2}).format(n);}
   function tierIndex(q){
@@ -115,16 +141,12 @@
     PLANS.forEach((p,idx)=>{
       const tr=document.createElement('tr');
       const td1=document.createElement('td'); td1.innerHTML=`<span class='planLabel'>${p.plan}</span>`; tr.appendChild(td1);
-
       const tdBase=document.createElement('td'); tdBase.className='money'; tdBase.id=`base-${idx}`; tr.appendChild(tdBase);
-
       const tdQty=document.createElement('td');
       const inp=document.createElement('input'); inp.type='number'; inp.min='0'; inp.step='1'; inp.className='qty'; inp.value=0; inp.dataset.index=idx; inp.addEventListener('input', recalc);
       tdQty.appendChild(inp); tr.appendChild(tdQty);
-
       const tdUnit=document.createElement('td'); tdUnit.className='money'; tdUnit.id=`unit-${idx}`; tr.appendChild(tdUnit);
       const tdSum=document.createElement('td'); tdSum.className='money'; tdSum.id=`sum-${idx}`; tr.appendChild(tdSum);
-
       tb.appendChild(tr);
     });
   }
@@ -133,58 +155,33 @@
     const withBeem=document.getElementById('withBeem').checked;
     const withKMU=document.getElementById('withKMU').checked;
     const withVAT=document.getElementById('withVAT').checked;
-
-    // 1) Gesamtanzahl bestimmen
-    let totalQty = 0;
-    document.querySelectorAll('.qty').forEach(inp=>{ totalQty += Math.max(0, parseInt(inp.value||'0',10)); });
-    const tIdxGlobal = tierIndex(totalQty || 1);
-
-    let subtotal=0;
-    let kmu_base_total=0;
-    let volume_discount_total=0;
-    let kmu_discount_total=0;
-
-    // 2) Alle Zeilen mit globalem tIdx berechnen
+    let totalQty=0; document.querySelectorAll('.qty').forEach(inp=>{totalQty+=Math.max(0,parseInt(inp.value||'0',10));});
+    const tIdxGlobal=tierIndex(totalQty||1);
+    let subtotal=0,kmu_base_total=0,volume_discount_total=0,kmu_discount_total=0;
     document.querySelectorAll('.qty').forEach(inp=>{
       const i=parseInt(inp.dataset.index,10);
       const q=Math.max(0,parseInt(inp.value||'0',10));
-      const tiers = PLANS[i].tiers_excl_beem;
-
-      const base_with_beem = tiers[0] + BEEM; // Ausgangspreis (1–4 + Beem)
-      document.getElementById(`base-${i}`).textContent = fmt(base_with_beem);
-
-      const unit_excl = tiers[tIdxGlobal];      // globaler Mengenindex
-      const unit_excl_baseline = tiers[0];      // 1–4 Basis für Volumenrabatt
-      const unit_beem = withBeem ? BEEM : 0;
-      const unit_eff = unit_excl + unit_beem;
-
-      const row = unit_eff * q;
-      document.getElementById(`unit-${i}`).textContent = fmt(unit_eff);
-      document.getElementById(`sum-${i}`).textContent = fmt(row);
-      subtotal += row;
-
-      const vol_disc = Math.max(0, (unit_excl_baseline - unit_excl)) * q; // exkl. Beem
-      volume_discount_total += vol_disc;
-
-      if (withKMU && kmuEligible(PLANS[i].plan)) kmu_base_total += unit_excl * q; // exkl. Beem
+      const tiers=PLANS[i].tiers_excl_beem;
+      const base_with_beem=tiers[0]+BEEM; document.getElementById(`base-${i}`).textContent=fmt(base_with_beem);
+      const unit_excl=tiers[tIdxGlobal]; const unit_excl_baseline=tiers[0];
+      const unit_beem=withBeem?BEEM:0; const unit_eff=unit_excl+unit_beem;
+      const row=unit_eff*q; document.getElementById(`unit-${i}`).textContent=fmt(unit_eff);
+      document.getElementById(`sum-${i}`).textContent=fmt(row); subtotal+=row;
+      const vol_disc=Math.max(0,(unit_excl_baseline-unit_excl))*q; volume_discount_total+=vol_disc;
+      if(withKMU&&kmuEligible(PLANS[i].plan)) kmu_base_total+=unit_excl*q;
     });
-
-    kmu_discount_total = withKMU ? kmu_base_total * 0.15 : 0;
-    const total_discount = volume_discount_total + kmu_discount_total;
-
-    let total = subtotal - kmu_discount_total; // Volumenrabatt steckt schon im unit_excl
-    if(withVAT) total *= (1+MWST);
-
-    document.getElementById('sumBefore').textContent = fmt(subtotal);
-    document.getElementById('kmuDiscount').textContent = (kmu_discount_total>0?'−':'') + fmt(kmu_discount_total);
-    document.getElementById('totalDiscount').textContent = (total_discount>0?'−':'') + fmt(total_discount);
-    document.getElementById('grandTotal').textContent = fmt(total);
+    kmu_discount_total=withKMU?kmu_base_total*0.15:0;
+    const total_discount=volume_discount_total+kmu_discount_total;
+    let total=subtotal-kmu_discount_total; if(withVAT) total*=(1+MWST);
+    document.getElementById('sumBefore').textContent=fmt(subtotal);
+    document.getElementById('kmuDiscount').textContent=(kmu_discount_total>0?'−':'')+fmt(kmu_discount_total);
+    document.getElementById('totalDiscount').textContent=(total_discount>0?'−':'')+fmt(total_discount);
+    document.getElementById('grandTotal').textContent=fmt(total);
   }
 
   document.addEventListener('change', e=>{ if(['withBeem','withKMU','withVAT'].includes(e.target.id)) recalc(); });
   document.getElementById('btnReset').addEventListener('click', ()=>{ document.querySelectorAll('.qty').forEach(inp=> inp.value=0); document.getElementById('withBeem').checked=true; document.getElementById('withKMU').checked=false; document.getElementById('withVAT').checked=false; recalc(); });
   document.getElementById('btnPDF').addEventListener('click', ()=> window.print());
-
   renderRows(); recalc();
 </script>
 </body>
